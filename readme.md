@@ -1,6 +1,6 @@
 # Express and React
 
-## Assignment
+<!-- ## Assignment
 
 Customize the backend and client work with your own content to create a full stack website.
 Edit the schema to conform to you content.
@@ -16,11 +16,11 @@ You should have read and stepped through the [useState](https://reactjs.org/docs
 Read:
 
 - [Building Your Own Hooks](https://reactjs.org/docs/hooks-custom.html)
-- [useContext](https://reactjs.org/docs/context.html)
+- [useContext](https://reactjs.org/docs/context.html) -->
 
 ## Exercise: React Front End
 
-Clone this repo into your projects folder and cd into it.
+Fork and clone this repo into your projects folder and cd into it.
 
 Remove the `.git` directory with `rm -rf .git`.
 

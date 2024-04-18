@@ -20,41 +20,36 @@ Read:
 
 ## Exercise: React Front End
 
-Fork and clone this repo into your projects folder and cd into it.
+Clone this repo into your projects folder and cd into it.
 
 Remove the `.git` directory with `rm -rf .git`.
 
 ### Backend
 
+We will run our backend on port 3456. Change the setting in the backend `.env` file.
+
 - cd into the backend,
 - initialize it as a git repo,
 - NPM install all dependencies,
 - start Docker and run `docker run --name recipes-mongo -dit -p 27017:27017 --rm mongo:4.4.1`
-- start the backend: `npm run dev`
+
+Edit the scripts in package.json:
+
+```js
+  "scripts": {
+    "start": "NODE_ENV=production node server.js",
+    "start:dev": "NODE_ENV=development nodemon server.js"
+  },
+```
+
+- start the backend: `npm run start:dev`
 - test by visiting localhost on port 3456.
 
-Note the scripts in package.json:
-
-```js
-"scripts": {
-  "start": "NODE_ENV=production node server.js",
-  "dev": "NODE_ENV=development nodemon server.js"
-},
-```
-
-Note the following in server.js:
-
-```js
-if (process.env.NODE_ENV === "production") {
-  require("dotenv").config();
-}
-```
-
-## Environment Variables
+<!-- ## Environment Variables -->
 
 <!-- `DATABASE=mongodb+srv://daniel:dd2345@cluster0.bs2la.mongodb.net/recipes?retryWrites=true&w=majority` -->
 
-Go to [MongoDb](https://www.mongodb.com) and sign in to your account. Find the Cluster you created and click on 'Connect' to get the connection string.
+<!-- Go to [MongoDb](https://www.mongodb.com) and sign in to your account. Find the Cluster you created and click on 'Connect' to get the connection string.
 
 Replace the database variable in `backend/.env.sample` with your own and rename the file to `.env`. Review the Database Access and Network Access settings on MongoDb. Check to ensure that your IP address settings are current or set to 'all.'
 
@@ -66,7 +61,7 @@ npm install and run `npm run dev` to test. You should see the vanilla js site we
 
 Note: install a JSON formatter for your browser.
 
-[Chrome](https://chrome.google.com/webstore/detail/json-formatter/bcjindcccaagfpapjjmafapmmgkkhgoa) or use [Firefox Developer Edition](https://www.mozilla.org/en-US/firefox/developer/).
+[Chrome](https://chrome.google.com/webstore/detail/json-formatter/bcjindcccaagfpapjjmafapmmgkkhgoa) or use [Firefox Developer Edition](https://www.mozilla.org/en-US/firefox/developer/). -->
 
 ## Create a React Project
 
@@ -110,11 +105,11 @@ root.render(<App />);
 
 Set a [Proxy](https://create-react-app.dev/docs/proxying-api-requests-in-development/) in the React client package.json.
 
-To use the Heroku app:
+<!-- To use the Heroku app:
 
-`"proxy": "https://recipes-do-not-delete.herokuapp.com/",`
+`"proxy": "https://recipes-do-not-delete.herokuapp.com/",` -->
 
-To use your local db (make sure you start the backend using `npm run dev`)
+To use your local db (make sure you restart the backend using `npm run dev`)
 
 `"proxy": "http://localhost:3456/",`
 
@@ -142,20 +137,6 @@ function App() {
 }
 
 export default App;
-```
-
-Add some basic CSS:
-
-```js
-import React from "react";
-import { createRoot } from "react-dom/client";
-import "./index.css";
-import App from "./App";
-
-const container = document.getElementById("root");
-const root = createRoot(container);
-
-root.render(<App />);
 ```
 
 Add a new index.css file in src:
@@ -220,6 +201,15 @@ button.delete {
   color: #007eb6;
   cursor: pointer;
 }
+```
+
+Import the basic CSS:
+
+```js
+import React from "react";
+import { createRoot } from "react-dom/client";
+import "./index.css";
+...
 ```
 
 ## Note: CORS
@@ -299,7 +289,7 @@ export default Recipe;
 
 Import it and compose it in App.js and test.
 
-Scaffold the Recipe component:
+Build out the Recipe component to display additional data:
 
 ```js
 import React from "react";
@@ -383,7 +373,7 @@ function App() {
 export default App;
 ```
 
-Demo - in Recipe.js:
+Demo - in App.js:
 
 <!-- prettier-ignore -->
 ```js
@@ -486,9 +476,9 @@ export default Recipe;
 
 Check for browser refresh on the new route by watching the console.
 
-Demo - note that the component renders twice. Try using an object instead of an array to initialize state:
+<!-- Demo - note that the component renders twice. Try using an object instead of an array to initialize state:
 
-`const [recipes, setRecipes] = React.useState({});`
+`const [recipes, setRecipes] = React.useState({});` -->
 
 Here is the entire App component:
 

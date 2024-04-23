@@ -38,16 +38,18 @@ Check if any Docker containers are running:
 $ docker container ls
 ```
 
-## Docker CLI Reference
+If not, start Docker and run `docker run --name recipes-mongo -dit -p 27017:27017 --rm mongo:4.4.1`
 
-https://docs.docker.com/reference/cli
+Here's the [Docker CLI Reference](https://docs.docker.com/reference/cli).
 
 <!-- https://docs.docker.com/reference/cli/docker/container/kill/
 4f3ff74f7934d3f1e386ee035a47f13dd7ea9f602ab9bb1fba278902696abc14
 -->
 
-- https://docs.docker.com/reference/cli/docker/container/run/
-- https://docs.docker.com/reference/cli/docker/container/exec/
+- [Docker run](https://docs.docker.com/reference/cli/docker/container/run/)
+- [Docker exec](https://docs.docker.com/reference/cli/docker/container/exec/)
+
+Some samples of running Docker CLI on the command line:
 
 ```sh
 $ docker stop recipes-mongo
@@ -56,39 +58,10 @@ $ docker exec -it recipes-mongo mongo
 $ docker kill my_container
 ```
 
-If not, start Docker and run `docker run --name recipes-mongo -dit -p 27017:27017 --rm mongo:4.4.1`
-
-<!-- Edit the scripts in package.json:
-
-```js
-  "scripts": {
-    "start": "NODE_ENV=production node server.js",
-    "start:dev": "NODE_ENV=development nodemon server.js"
-  },
-``` -->
-
 - start the backend: `npm run start:dev`
 - test by visiting [localhost on port 3456](http://localhost:3456/)
 - ensure that the database [contains some recipes](http://localhost:3456/api/recipes)
 - if not [import](http://localhost:3456/api/import) some
-
-<!-- ## Environment Variables -->
-
-<!-- `DATABASE=mongodb+srv://daniel:dd2345@cluster0.bs2la.mongodb.net/recipes?retryWrites=true&w=majority` -->
-
-<!-- Go to [MongoDb](https://www.mongodb.com) and sign in to your account. Find the Cluster you created and click on 'Connect' to get the connection string.
-
-Replace the database variable in `backend/.env.sample` with your own and rename the file to `.env`. Review the Database Access and Network Access settings on MongoDb. Check to ensure that your IP address settings are current or set to 'all.'
-
-Ensure that your local DB is running:
-
-`docker run --name recipes-mongo -dit -p 27017:27017 --rm mongo:4.4.1`
-
-npm install and run `npm run dev` to test. You should see the vanilla js site we constructed. Be sure to test the `/api/recipes` endpoint as well.
-
-Note: install a JSON formatter for your browser.
-
-[Chrome](https://chrome.google.com/webstore/detail/json-formatter/bcjindcccaagfpapjjmafapmmgkkhgoa) or use [Firefox Developer Edition](https://www.mozilla.org/en-US/firefox/developer/). -->
 
 ## Create a React Project
 
@@ -96,7 +69,7 @@ cd into _the top level_ of the project directory and run Create React App:
 
 `npx create-react-app client`
 
-CD into the client folder and remove the contents of the src folder and create an initial index.js file:
+`cd` into the client folder and remove the contents of the src folder and create an initial index.js file:
 
 ```sh
 $ cd client
@@ -104,7 +77,9 @@ $ rm src/*
 $ touch src/index.js
 ```
 
-in `client/.vscode/settings.json`:
+Set a color for VSCode's display of the front end.
+
+In a new file: `client/.vscode/settings.json`:
 
 ```js
 {
@@ -130,13 +105,7 @@ const root = createRoot(container);
 root.render(<App />);
 ```
 
-Set a [Proxy](https://create-react-app.dev/docs/proxying-api-requests-in-development/) in the React client package.json.
-
-<!-- To use the Heroku app:
-
-`"proxy": "https://recipes-do-not-delete.herokuapp.com/",` -->
-
-To use your local db (make sure you restart the backend using `npm run dev`)
+Set a [Proxy](https://create-react-app.dev/docs/proxying-api-requests-in-development/) in the React client `package.json`.
 
 `"proxy": "http://localhost:3456/",`
 
@@ -230,7 +199,7 @@ button.delete {
 }
 ```
 
-Import the basic CSS:
+Import the basic CSS into `index.js`:
 
 ```js
 import React from "react";
@@ -289,17 +258,6 @@ function Recipe(props) {
 export default App;
 ```
 
-Demo - the problem with not adding an empty dependency array:
-
-```js
-React.useEffect(() => {
-  console.log(" useEffect running ");
-  fetch(`/api/recipes`)
-    .then((response) => response.json())
-    .then((data) => setRecipes(data));
-});
-```
-
 ## Multiple Components
 
 Breakout the Recipe component into a separate `src/Recipe.js` file:
@@ -314,7 +272,36 @@ function Recipe(props) {
 export default Recipe;
 ```
 
-Import it and compose it in App.js and test.
+Import it and compose it in `App.js`:
+
+```js
+import React from "react";
+import Recipe from "./Recipe";
+
+function App() {
+  const [recipes, setRecipes] = React.useState([]);
+
+  React.useEffect(() => {
+    fetch(`/api/recipes`)
+      .then((response) => response.json())
+      .then((data) => setRecipes(data));
+  }, []);
+
+  return (
+    <div>
+      {recipes.map((recipe) => (
+        <Recipe key={recipe._id} recipe={recipe} />
+      ))}
+    </div>
+  );
+}
+
+// function Recipe(props) {
+//   return <p>{props.recipe.title}</p>;
+// }
+
+export default App;
+```
 
 Build out the Recipe component to display additional data:
 
@@ -405,7 +392,7 @@ function RecipeDetail(props) {
 export default RecipeDetail;
 ```
 
-`App.js` imports and renders `Recipes.js`:
+Change `App.js` to import and render `Recipes.js`:
 
 ```js
 import React from "react";
@@ -440,18 +427,9 @@ export default App;
 
 Note the check for `response.ok`. See this [article](https://dev.to/myogeshchavan97/do-you-know-why-we-check-for-response-ok-while-using-fetch-1mkd).
 
-<!-- Demo - in App.js: -->
-
-<!-- prettier-ignore -->
-<!-- ```html
-<small>
-  You are running this application in <b>{process.env.NODE_ENV}</b> mode.
-</small>
-``` -->
-
 ## Client Side Routing
 
-Up until this point, you have dealt with simple projects that do not require transitioning from one view to another. You have yet to work with Routing in React.
+Up until this point, you have dealt with simple projects that do not require transitioning from one view to another. We have yet to work with Routing in React.
 
 In SPAs, routing is the ability to move between different parts of an application when a user enters a URL or clicks an element without actually going to a new HTML document or refreshing the page.
 
@@ -552,10 +530,6 @@ The `Link` component is used to navigate to a new route. It ensures that the pag
 
 Check for browser refresh on the new route by watching the console.
 
-<!-- Demo - note that the component renders twice. Try using an object instead of an array to initialize state:
-
-`const [recipes, setRecipes] = React.useState({});` -->
-
 Here is the entire App component:
 
 ```js
@@ -610,8 +584,6 @@ function RecipeDetail(props) {
   const { recipeId } = useParams();
   const currRecipe = props.recipes.filter((recipe) => recipe._id === recipeId);
   console.log("currRecipe[0]", currRecipe[0]);
-  // const thisRecipe = { ...currRecipe[0] };
-  // console.log(" thisRecipe ", thisRecipe);
 
   return (
     <div>
@@ -651,7 +623,7 @@ function RecipeDetail(props) {
 export default RecipeDetail;
 ```
 
-We are importing `useParams` from `react-router-dom` and will be using it to get the recipeId from the URL.
+We are importing `useParams` from `react-router-dom` and are using it to get the recipeId from the URL.
 
 ## Custom Hooks
 
@@ -945,7 +917,7 @@ function App() {
 ReactDOM.render(<App />, document.querySelector("#root"));
 ``` -->
 
-Create a hooks directory in src, move the custom hook with the changes below into it, and export it.
+In the hooks directory, copy the custom hook below :
 
 ```js
 import React from "react";
@@ -1048,7 +1020,7 @@ import { useFetch } from "./hooks/useFetch";
 
 ```js
 function App() {
-  const { loading, data, error } = useFetch(`/api/recipes`);
+  const { loading, data: recipes, error } = useFetch(`/api/recipes`);
 ```
 
 - the routes pass data the the recipes component:
@@ -1056,8 +1028,8 @@ function App() {
 ```js
 <BrowserRouter>
   <Routes>
-    <Route path="/" element={<Recipes recipes={data} />} />
-    <Route path="/:recipeId" element={<RecipeDetail recipes={data} />} />
+    <Route path="/" element={<Recipes recipes={recipes} />} />
+    <Route path="/:recipeId" element={<RecipeDetail recipes={recipes} />} />
   </Routes>
 </BrowserRouter>
 ```
@@ -1074,9 +1046,7 @@ if (error) {
 }
 ```
 
-<!-- Review: [destructuring on MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment). Note the ability to re-assign variable names and how they differ for Arrays and Objects. -->
-
-After resetting data to recipes ( `data: recipes` ), here is App.js in its entirety:
+Here is App.js in its entirety:
 
 ```js
 import React from "react";
@@ -1141,11 +1111,11 @@ Import it and render in `App.js`:
 
 ```js
 import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Recipes from "./Recipes";
 import RecipeDetail from "./RecipeDetail";
 import Nav from "./Nav";
-import { useFetch } from "./hooks/api";
+import { useFetch } from "./hooks/useFetch";
 
 function App() {
   const [loggedin, setLoggedin] = React.useState(false);
@@ -1216,7 +1186,7 @@ const StyledNav = styled.nav`
 `;
 ```
 
-The `Nav` components:
+In the `Nav` component:
 
 ```js
 import React from "react";
@@ -1317,7 +1287,7 @@ export default function Button({ children, func }) {
 }
 ```
 
-Note: `--btn-bg: var(--btn-color, #bada55);` uses a variable to set a variable and provides a fallback.
+Note the second color in the CSS variable: `--btn-bg: var(--btn-color, #bada55);`. This sets a variable and provides a fallback.
 
 Import it into Nav
 
@@ -1347,7 +1317,7 @@ const StyledNav = styled.nav`
 
 `--btn-bg: var(--btn-color, #bada55);`
 
-we proably want to store our color palette at a higher level. Add to index.css:
+we probably want to store our color palette at a higher level. Add to index.css:
 
 ```css
 :root {
@@ -1355,7 +1325,7 @@ we proably want to store our color palette at a higher level. Add to index.css:
 }
 ```
 
-In `Nav`:
+In `Nav.js`:
 
 ```css
 --btn-color: var(--blue-dark);
@@ -1363,7 +1333,7 @@ In `Nav`:
 
 This is the beginning of our standalone Button component.
 
-Also: `const [loggedin, setLoggedin] = useToggle(false);`
+We will also use the toggle hook:
 
 ```js
 import { useState } from "react";
@@ -1381,6 +1351,8 @@ export default useToggle;
 ```
 
 Import the `useToggle` hook into `App` and use it to toggle the visibility of the RecipeDetail component.
+
+Note: `const [loggedin, setLoggedin] = useToggle(false);`
 
 ```js
 import React from "react";
@@ -1580,7 +1552,7 @@ function objectifyTwo(key, value) {
 objectifyTwo("name", "Daniel");
 ```
 
-Test the button.
+Test the button. You should see the new recipe in the console.
 
 ## API Hook Returns a Promise
 
@@ -1705,7 +1677,7 @@ export default App;
 
 ## Add the Recipe
 
-Add an addRecipe function to App.js and props drill it down to `Recipes`:
+Import the post method from useFetch. Add an addRecipe function to `App.js` and make that function available to the `Recipes` component:
 
 ```js
   const { get, post } = useFetch(`/api/recipes`);
@@ -1732,9 +1704,9 @@ Add an addRecipe function to App.js and props drill it down to `Recipes`:
 
 ```
 
-Note the addition of post from the useFetch custom hook.
+Note the addition of `post` from the `useFetch` custom hook.
 
-Props drill the addRecipe function to the form:
+Prop drill the addRecipe function to the form:
 
 ```js
 import React from "react";
@@ -1780,7 +1752,7 @@ const FormCreateRecipe = ({ addRecipe }) => {
 
 Test and debug.
 
-<!-- Demo - backend validation:
+Note - we could use backend validation to ensure that the year is a string. We could also add a required field to the year input in the form:
 
 ```js
 const RecipeSchema = new mongoose.Schema({
@@ -1802,7 +1774,7 @@ const [values, setValues] = React.useState({
   description: "",
   year: "",
 });
-``` -->
+```
 
 ## Delete
 
@@ -1810,11 +1782,13 @@ In `App.js`:
 
 ```js
 const { get, post, del } = useFetch(`/api/recipes`);
+
 // new function
 const deleteRecipe = (recipeId) => {
   console.log("recipeId:", recipeId);
   del(`/api/recipes/${recipeId}`).then(window.location.replace("/"));
 };
+
 // pass deleteRecipe prop
 <Route
   path="/:recipeId"
@@ -1911,14 +1885,17 @@ const editRecipe = (updatedRecipe) => {
     })
   );
 };
+```
 
-// prop drill
+Prop drill:
+
+```js
 <RecipeDetail
   recipes={recipes}
   deleteRecipe={deleteRecipe}
   loggedin={loggedin}
   editRecipe={editRecipe}
-/>;
+/>
 ```
 
 New component; `src/FormEditRecipe.js`:

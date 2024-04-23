@@ -31,19 +31,46 @@ We will run our backend on port 3456. Change the setting in the backend `.env` f
 - cd into the backend,
 - initialize it as a git repo,
 - NPM install all dependencies,
-- start Docker and run `docker run --name recipes-mongo -dit -p 27017:27017 --rm mongo:4.4.1`
 
-Edit the scripts in package.json:
+Check if any Docker containers are running:
+
+```sh
+$ docker container ls
+```
+
+## Docker CLI Reference
+
+https://docs.docker.com/reference/cli
+
+<!-- https://docs.docker.com/reference/cli/docker/container/kill/
+4f3ff74f7934d3f1e386ee035a47f13dd7ea9f602ab9bb1fba278902696abc14
+-->
+
+- https://docs.docker.com/reference/cli/docker/container/run/
+- https://docs.docker.com/reference/cli/docker/container/exec/
+
+```sh
+$ docker stop recipes-mongo
+$ docker run --name recipes-mongo -dit -p 27017:27017 --rm mongo:4.4.1
+$ docker exec -it recipes-mongo mongo
+$ docker kill my_container
+```
+
+If not, start Docker and run `docker run --name recipes-mongo -dit -p 27017:27017 --rm mongo:4.4.1`
+
+<!-- Edit the scripts in package.json:
 
 ```js
   "scripts": {
     "start": "NODE_ENV=production node server.js",
     "start:dev": "NODE_ENV=development nodemon server.js"
   },
-```
+``` -->
 
 - start the backend: `npm run start:dev`
-- test by visiting localhost on port 3456.
+- test by visiting [localhost on port 3456](http://localhost:3456/)
+- ensure that the database [contains some recipes](http://localhost:3456/api/recipes)
+- if not [import](http://localhost:3456/api/import) some
 
 <!-- ## Environment Variables -->
 
@@ -295,7 +322,7 @@ Build out the Recipe component to display additional data:
 import React from "react";
 
 function Recipe({ recipe }) {
-  const { title, year, description, image, _id } = recipe;
+  const { title, created, description, image, _id } = recipe;
   return (
     <summary>
       <img src={`img/${image}`} alt={title} />
@@ -303,12 +330,42 @@ function Recipe({ recipe }) {
         <a href={_id}>{title}</a>
       </h3>
       <p>{description}</p>
-      <small>Published: {year}</small>
+      <small>Published: {formatDate(created)}</small>
     </summary>
   );
 }
 
 export default Recipe;
+```
+
+`src/utils.js`:
+
+```js
+export function formatDate(timestamp) {
+  // Create a date object from the timestamp
+  let date = new Date(timestamp);
+
+  // Create a list of names for the months
+  let months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  // return a formatted date
+  return (
+    months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear()
+  );
+}
 ```
 
 In preparation for the next steps, create two new components. We'll use these components in the next steps to explore routing.
@@ -359,8 +416,16 @@ function App() {
 
   React.useEffect(() => {
     fetch(`/api/recipes`)
-      .then((response) => response.json())
-      .then((data) => setRecipes(data));
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          console.log("something went wrong");
+          return Promise.reject(response);
+        }
+      })
+      .then((data) => setRecipes(data))
+      .catch((err) => console.log(err));
   }, []);
 
   return (
@@ -373,15 +438,16 @@ function App() {
 export default App;
 ```
 
-Demo - in App.js:
+Note the check for `response.ok`. See this [article](https://dev.to/myogeshchavan97/do-you-know-why-we-check-for-response-ok-while-using-fetch-1mkd).
+
+<!-- Demo - in App.js: -->
 
 <!-- prettier-ignore -->
-```js
-{ process.env.NODE_ENV === "production" ? "prod" : "dev" }
+<!-- ```html
 <small>
   You are running this application in <b>{process.env.NODE_ENV}</b> mode.
-</small>;
-```
+</small>
+``` -->
 
 ## Client Side Routing
 
@@ -393,9 +459,9 @@ We could build a "list / detail" type site without routing but it is important t
 
 To begin exploring client side routing we'll use the [React Router](https://reactrouter.com/web/guides/quick-start).
 
-_Note_: be sure you are cd'd into the client directory before installing React related packages.
+_Note_: be sure you are in the `client` directory before installing React related packages.
 
-npm install the latest version of [react router](https://reactrouter.com/docs/en/v6) and import the router into App.
+npm install the latest version of [react router](https://reactrouter.com/docs/en/v6) and import the router into `App.js`.
 
 ```sh
 npm i react-router-dom
@@ -414,8 +480,15 @@ function App() {
 
   React.useEffect(() => {
     fetch(`/api/recipes`)
-      .then((response) => response.json())
-      .then((data) => setRecipes(data));
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          return Promise.reject(response);
+        }
+      })
+      .then((data) => setRecipes(data))
+      .catch((err) => console.log(err));
   }, []);
 
   return (
@@ -455,10 +528,11 @@ Use the router's Link component in `Recipe.js`:
 
 ```js
 import React from "react";
+import { formatDate } from "./utils";
 import { Link } from "react-router-dom";
 
 function Recipe({ recipe }) {
-  const { title, year, description, image, _id } = recipe;
+  const { title, created, description, image, _id } = recipe;
   return (
     <summary>
       <img src={`img/${image}`} alt={title} />
@@ -466,13 +540,15 @@ function Recipe({ recipe }) {
         <Link to={_id}>{title}</Link>
       </h3>
       <p>{description}</p>
-      <small>Published: {year}</small>
+      <small>Published: {formatDate(created)}</small>
     </summary>
   );
 }
 
 export default Recipe;
 ```
+
+The `Link` component is used to navigate to a new route. It ensures that the page does not refresh when the link is clicked. The `to` prop is set to the recipe's id.
 
 Check for browser refresh on the new route by watching the console.
 
@@ -493,8 +569,15 @@ function App() {
 
   React.useEffect(() => {
     fetch(`/api/recipes`)
-      .then((response) => response.json())
-      .then((data) => setRecipes(data));
+      .then((response) => {
+        if (response.ok) {
+          return response.json();
+        } else {
+          return Promise.reject(response);
+        }
+      })
+      .then((data) => setRecipes(data))
+      .catch((err) => console.log(err));
   }, []);
 
   return (
@@ -568,6 +651,8 @@ function RecipeDetail(props) {
 export default RecipeDetail;
 ```
 
+We are importing `useParams` from `react-router-dom` and will be using it to get the recipeId from the URL.
+
 ## Custom Hooks
 
 Building [custom Hooks](https://reactjs.org/docs/hooks-custom.html) lets you extract component logic into reusable functions.
@@ -610,7 +695,6 @@ Create a hooks directory and save this as useToggle.js:
 import { useState } from "react";
 
 function useToggle(initialVal = false) {
-  // call useState, "reserve piece of state"
   const [state, setState] = useState(initialVal);
   const toggle = () => {
     setState(!state);
@@ -683,10 +767,10 @@ function App() {
 
   if (error) {
     return (
-      <React.Fragment>
+      <>
         <p>{error}</p>
         <button onClick={incrementIndex}>Next Post</button>
-      </React.Fragment>
+      </>
     );
   }
 
@@ -967,13 +1051,18 @@ function App() {
   const { loading, data, error } = useFetch(`/api/recipes`);
 ```
 
-- Change the recipes route to pass data the the recipes component:
+- the routes pass data the the recipes component:
 
 ```js
-<Route path="/" element={<Recipes recipes={recipes} />} />
+<BrowserRouter>
+  <Routes>
+    <Route path="/" element={<Recipes recipes={data} />} />
+    <Route path="/:recipeId" element={<RecipeDetail recipes={data} />} />
+  </Routes>
+</BrowserRouter>
 ```
 
-- Finally, add the loading and error returns we used in the json placeholder example:
+- Finally, add the loading and error early returns to the App component:
 
 ```js
 if (loading === true) {
@@ -985,7 +1074,7 @@ if (error) {
 }
 ```
 
-Review: [destructuring on MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment). Note the ability to re-assign variable names and how they differ for Arrays and Objects.
+<!-- Review: [destructuring on MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment). Note the ability to re-assign variable names and how they differ for Arrays and Objects. -->
 
 After resetting data to recipes ( `data: recipes` ), here is App.js in its entirety:
 
@@ -1022,7 +1111,7 @@ export default App;
 
 ## Adding a NavBar
 
-Create `Nav.js`:
+Create `Nav.js` in `src`:
 
 ```js
 import React from "react";
@@ -1089,14 +1178,18 @@ function App() {
 export default App;
 ```
 
+## CSS in JS: Styled Components
+
+Install [styled components](https://styled-components.com):
+
 `npm i styled-components`
 
-Install styled components and create some css to support the new element:
+and create a Styled Component to support the new nav:
 
 ```css
 import styled from "styled-components";
 
-const NavStyles = styled.nav`
+const StyledNav = styled.nav`
   min-height: 3rem;
   background-color: #007eb6;
   margin-bottom: 1rem;
@@ -1123,14 +1216,66 @@ const NavStyles = styled.nav`
 `;
 ```
 
-## Creating a Reusable Button Component
-
-An element shouldn’t set its width, margin, height and color. These attributes should be set by its parent(s).
-
-Remove the button styles in Nav and review CSs variables by using a variable to set the background color of Nav:
+The `Nav` components:
 
 ```js
-const NavStyles = styled.nav`
+import React from "react";
+import { Link } from "react-router-dom";
+import styled from "styled-components";
+
+const StyledNav = styled.nav`
+  min-height: 3rem;
+  background-color: #007eb6;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: row;
+  align-content: center;
+  justify-content: space-between;
+  a {
+    color: #fff;
+    padding: 1rem;
+    font-size: 2rem;
+    text-decoration: none;
+  }
+  button {
+    color: #fff;
+    font-size: 1rem;
+    padding: 0.5rem;
+    margin: 0 1rem;
+    background: #007eb6;
+    border: 2px solid #fff;
+    border-radius: 3px;
+    align-self: center;
+  }
+`;
+
+const Nav = ({ loggedin, setLoggedin }) => {
+  return (
+    <StyledNav>
+      <h1>
+        <Link to="/">Recipes</Link>
+      </h1>
+
+      {loggedin ? (
+        <button onClick={() => setLoggedin(false)}>Log Out</button>
+      ) : (
+        <button onClick={() => setLoggedin(true)}>Log In</button>
+      )}
+    </StyledNav>
+  );
+};
+
+export default Nav;
+```
+
+## Creating a Reusable Button Component
+
+An element shouldn’t set its width, margin, height and color. These attributes should be contolled by its parent.
+
+Remove the button styles in Nav and review CSS variables by using a variable to set the background color of Nav:
+
+```js
+const StyledNav = styled.nav`
   --bg-color: #007eb6;
   min-height: 3rem;
   background-color: var(--bg-color);
@@ -1148,7 +1293,7 @@ const NavStyles = styled.nav`
 `;
 ```
 
-Create a Button component in `src/button/Button.js`:
+Create a Button component in `src/Button.js`:
 
 ```js
 import React from "react";
@@ -1174,7 +1319,11 @@ export default function Button({ children, func }) {
 
 Note: `--btn-bg: var(--btn-color, #bada55);` uses a variable to set a variable and provides a fallback.
 
-Import it into Nav `import Button from "./button/Button";` and compose it:
+Import it into Nav
+
+`import Button from "./Button";`
+
+and compose it:
 
 <!-- prettier-ignore -->
 ```js
@@ -1189,7 +1338,7 @@ Import it into Nav `import Button from "./button/Button";` and compose it:
 Set it to use a color variable passed in from Nav:
 
 ```js
-const NavStyles = styled.nav`
+const StyledNav = styled.nav`
   --bg-color: #007eb6;
   --btn-color: #007eb6;
 ```
@@ -1206,7 +1355,7 @@ we proably want to store our color palette at a higher level. Add to index.css:
 }
 ```
 
-In Nav:
+In `Nav`:
 
 ```css
 --btn-color: var(--blue-dark);
@@ -1215,6 +1364,58 @@ In Nav:
 This is the beginning of our standalone Button component.
 
 Also: `const [loggedin, setLoggedin] = useToggle(false);`
+
+```js
+import { useState } from "react";
+
+function useToggle(initialVal = false) {
+  const [state, setState] = useState(initialVal);
+  const toggle = () => {
+    setState(!state);
+  };
+  // return piece of state AND a function to toggle it
+  return [state, toggle];
+}
+
+export default useToggle;
+```
+
+Import the `useToggle` hook into `App` and use it to toggle the visibility of the RecipeDetail component.
+
+```js
+import React from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Recipes from "./Recipes";
+import RecipeDetail from "./RecipeDetail";
+import Nav from "./Nav";
+import { useFetch } from "./hooks/useFetch";
+import useToggle from "./hooks/useToggle";
+
+function App() {
+  const [loggedin, setLoggedin] = useToggle(false);
+  const { loading, data: recipes, error } = useFetch(`/api/recipes`);
+
+  if (loading === true) {
+    return <p>Loading</p>;
+  }
+
+  if (error) {
+    return <p>{error}</p>;
+  }
+
+  return (
+    <BrowserRouter>
+      <Nav setLoggedin={setLoggedin} loggedin={loggedin} />
+      <Routes>
+        <Route path="/" element={<Recipes recipes={recipes} />} />
+        <Route path="/:recipeId" element={<RecipeDetail recipes={recipes} />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+```
 
 ## Adding a Recipe
 
@@ -1341,7 +1542,7 @@ const FormCreateRecipe = () => {
 export default FormCreateRecipe;
 ```
 
-Note the difference between what we are doing here for handling state change for inputs vs. how we accomplished the same task in previous classes. (Examine the console output.)
+Note the difference between what we are doing here: handling state change for inputs vs. how we accomplished the same task in previous classes. (Examine the console output.)
 
 We are using ES6 [computed property names](https://ui.dev/computed-property-names/) which allow you to have an expression (a piece of code that results in a single value like a variable or function invocation) be computed as a property name on an object.
 
@@ -1376,7 +1577,7 @@ function objectifyTwo(key, value) {
   };
 }
 
-objectifyTwo("color", "purple");
+objectifyTwo("name", "Daniel");
 ```
 
 Test the button.
@@ -1466,7 +1667,10 @@ function App() {
         setRecipes(data);
         setLoading(false);
       })
-      .catch((error) => setError(error));
+      .catch((error) => {
+        setLoading(false);
+        setError(error);
+      });
   }, []);
 
   if (loading === true) {
@@ -1628,11 +1832,11 @@ In `RecipeDetail.js`:
 
 <!-- prettier-ignore -->
 ```js
-{props.loggedin && (
+// {props.loggedin && (
   <button onClick={() => props.deleteRecipe(thisRecipe._id)}>
     delete
   </button>
-)}
+// )}
 
 <Link to="/">Home</Link>;
 ```
@@ -1697,6 +1901,7 @@ App.js:
 
 ```js
 const { get, post, del, put } = useFetch(`/api/recipes`);
+
 // create a new function
 const editRecipe = (updatedRecipe) => {
   console.log(updatedRecipe);
@@ -1706,6 +1911,7 @@ const editRecipe = (updatedRecipe) => {
     })
   );
 };
+
 // prop drill
 <RecipeDetail
   recipes={recipes}
@@ -1792,15 +1998,17 @@ Compose it in`RecipeDetail.js`:
 
 ```js
 import FormEditRecipe from "./FormEditRecipe";
+
 // destructure
 function RecipeDetail({ recipes, loggedin, deleteRecipe, editRecipe }) {
+
 // compose
-{loggedin && (
-  <>
+// {loggedin && (
+  // <>
     <FormEditRecipe thisRecipe={thisRecipe} editRecipe={editRecipe} />
     <button onClick={() => delRecipe()}>delete</button>
-  </>
-)}
+  // </>
+// )}
 ```
 
 <!-- ## Array.Reduce

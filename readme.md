@@ -18,7 +18,7 @@ Read:
 - [Building Your Own Hooks](https://reactjs.org/docs/hooks-custom.html)
 - [useContext](https://reactjs.org/docs/context.html) -->
 
-## Exercise: React Front End
+## Exercise: React Front End vSpr24
 
 Clone this repo into your projects folder and cd into it.
 

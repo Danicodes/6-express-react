@@ -11,9 +11,18 @@ app.use(express.static("static"));
 app.use(express.json({ extended: false }));
 app.use(express.urlencoded({ extended: false }));
 app.use(fileUpload());
+app.use((req, res, next) => {
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header(
+		"Access-Control-Allow-Headers",
+		"Origin, X-Requested-With, Content-Type, Accept"
+	);
+	res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+	next();
+});
 
 app.get("/", function (req, res) {
-  res.sendFile(__dirname + "/static/index.html");
+	res.sendFile(__dirname + "/static/index.html");
 });
 
 app.get("/api/recipes", recipeControllers.findAll);
@@ -26,9 +35,9 @@ app.get("/api/killall", recipeControllers.killall);
 app.post("/api/upload", recipeControllers.upload);
 
 mongoose
-  .connect(dataBaseURL, {})
-  .then(() => console.log("MongoDb connected"))
-  .catch((err) => console.log(err));
+	.connect(dataBaseURL, {})
+	.then(() => console.log("MongoDb connected"))
+	.catch((err) => console.log(err));
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => console.log(`Server running at port ${PORT}`));
